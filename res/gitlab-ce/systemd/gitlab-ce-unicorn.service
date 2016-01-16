@@ -1,0 +1,13 @@
+[Unit]
+Description=Unicorn web server for GitLab CE version control software
+Documentation=https://gitlab.com/
+Documentation=https://github.com/puppetlabs-operations/fpm-gitlab
+
+[Service]
+Type=forking
+Environment=SIDEKIQ_MEMORY_KILLER_MAX_RSS=1000000
+ExecStart=bundle exec unicorn_rails -c /etc/gitlab-ce/unicorn.rb -E production
+ExecReload=/bin/kill -USR2 $MAINPID
+KillSignal=SIGQUIT
+User=git
+WorkingDirectory=/opt/gitlab-ce

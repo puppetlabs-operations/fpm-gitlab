@@ -1,0 +1,13 @@
+# gitlab-workhorse.service
+#
+# Unit file for the gitlab-workhorse service.
+
+[Unit]
+Description=gitlab-workhorse handles slow HTTP requests for GitLab
+Documentation=https://gitlab.com/
+Documentation=https://gitlab.com/gitlab-org/gitlab-workhorse
+Documentation=https://github.com/puppetlabs-operations/fpm-gitlab
+
+[Service]
+ExecStart=/opt/gitlab-workhorse/bin/gitlab-workhorse -listenUmask 0 -listenNetwork unix -listenAddr /var/run/gitlab-workhorse.socket -authBackend http://127.0.0.1:8080 -authSocket /var/run/gitlab-ce/gitlab-ce.socket -documentRoot /opt/gitlab-ce/public
+User=git

@@ -1,0 +1,9 @@
+[Unit]
+Description=MailRoom service for the GitLab CE version control system
+Documentation=https://gitlab.com/
+Documentation=https://github.com/puppetlabs-operations/fpm-gitlab
+
+[Service]
+ExecStart=bundle exec mail_room -q -c /etc/gitlab-ce/mail_room.yml
+User=git
+WorkingDirectory=/opt/gitlab-ce

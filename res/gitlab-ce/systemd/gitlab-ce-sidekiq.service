@@ -1,0 +1,13 @@
+[Unit]
+Description=Sidekiq job control service for GitLab CE version control software
+Documentation=https://gitlab.com/
+Documentation=https://github.com/puppetlabs-operations/fpm-gitlab
+
+[Service]
+Type=forking
+Environment=SIDEKIQ_MEMORY_KILLER_MAX_RSS=1000000
+ExecStart=bundle exec sidekiq -q post_receive -q mailers -q archive_repo -q system_hook -q project_web_hook -q gitlab_shell -q incoming_email -q runner -q common -q default -e production
+# GitLab's sidekiq has a memory leak and gets forceably killed when it gets too big.
+Restart=always
+User=git
+WorkingDirectory=/opt/gitlab-ce
