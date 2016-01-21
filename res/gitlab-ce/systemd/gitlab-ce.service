@@ -1,10 +1,10 @@
 # gitlab.target
 #
-# This is a target unit file designed to enable you to enable a single unit and
+# This is a service unit file designed to allow you to enable a single unit and
 # have all the core gitlab services start.
 
 [Unit]
-Description=Service target for the GitLab version control software
+Description=GitLab version control software
 Documentation=https://gitlab.com/
 Documentation=https://github.com/puppetlabs-operations/fpm-gitlab
 BindsTo=gitlab-ce-mailroom.service

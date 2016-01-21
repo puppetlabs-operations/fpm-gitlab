@@ -4,6 +4,7 @@ Documentation=https://gitlab.com/
 Documentation=https://github.com/puppetlabs-operations/fpm-gitlab
 
 [Service]
-ExecStart=bundle exec mail_room -q -c /etc/gitlab-ce/mail_room.yml
+Environment=BUNDLE_GEMFILE=/opt/gitlab-ce/Gemfile
+ExecStart=/opt/gitlab-ce/bin/bundle exec mail_room -q -c /etc/gitlab-ce/mail_room.yml
 User=git
 WorkingDirectory=/opt/gitlab-ce
