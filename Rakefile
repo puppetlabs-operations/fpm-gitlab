@@ -99,6 +99,7 @@ task :build_deb_gl do
   FileUtils.cp("#{resdir_gl}/unicorn.rb", "#{pkgdir_gl}#{confdir_gl}/unicorn.rb")
   FileUtils.cp_r("#{resdir_gl}/systemd", "#{pkgdir_gl}/lib/systemd/system")
 
+  # TODO: This doesn't work unless the ruby version on the build box matches the ruby version on the destination system.
   system("bundle install --gemfile=#{pkgdir_gl}#{basedir_gl}/Gemfile --deployment --without development mysql test aws kerberos")
 
   package = FPM::Package::Dir.new
@@ -163,8 +164,17 @@ task :build_deb_wh do
   FileUtils.mkdir_p(["#{basedir_wh}/bin", 'lib/systemd'].map { |x| "#{pkgdir_wh}/#{x}" })
   srcdir = Dir.glob("#{builddir_wh}/gitlab-workhorse-*").first
   prefixdir = Dir.getwd() + '/' + installdir_wh
+  gosrcdir = Dir.getwd() + "/#{builddir_wh}/go-src"
+  Dir.mkdir(gosrcdir)
 
-  if (not system("make -C #{srcdir} install PREFIX=#{prefixdir} VERSION=#{version}")) then
+  if (not system("GOPATH=#{gosrcdir} go get github.com/coreos/go-systemd/activation")) then
+    raise('Could not download patch dependency github.com/coreos/go-systemd/activation')
+  end
+  if (not system("patch -d #{srcdir} -p1 < #{resdir_wh}/main-systemd.patch")) then
+    raise('Failed to apply systemd socket activation patch to gitlab-workhorse!')
+  end
+
+  if (not system("GOPATH=#{gosrcdir} make -C #{srcdir} install PREFIX=#{prefixdir} VERSION=#{version}")) then
     raise('Compilation of gitlab-workhorse failed!')
   end
 

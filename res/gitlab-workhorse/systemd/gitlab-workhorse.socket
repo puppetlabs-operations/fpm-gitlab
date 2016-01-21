@@ -1,2 +1,5 @@
 [Socket]
 ListenStream=/var/run/gitlab-workhorse.socket
+
+[Install]
+WantedBy=sockets.target

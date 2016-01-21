@@ -1,0 +1,67 @@
+diff --git a/main.go b/main.go
+index b2ff1e1..0017f13 100644
+--- a/main.go
++++ b/main.go
+@@ -24,6 +24,8 @@ import (
+ 	"regexp"
+ 	"syscall"
+ 	"time"
++
++	"github.com/coreos/go-systemd/activation"
+ )
+ 
+ // Current version of GitLab Workhorse
+@@ -32,6 +34,7 @@ var Version = "(unknown version)" // Set at build time in the Makefile
+ var printVersion = flag.Bool("version", false, "Print version and exit")
+ var listenAddr = flag.String("listenAddr", "localhost:8181", "Listen address for HTTP server")
+ var listenNetwork = flag.String("listenNetwork", "tcp", "Listen 'network' (tcp, tcp4, tcp6, unix)")
++var listenSystemd = flag.Bool("listenSystemd", false, "Listen via systemd socket activation")
+ var listenUmask = flag.Int("listenUmask", 022, "Umask for Unix socket, default: 022")
+ var authBackend = flag.String("authBackend", "http://localhost:8080", "Authentication/authorization backend")
+ var authSocket = flag.String("authSocket", "", "Optional: Unix domain socket to dial authBackend at")
+@@ -138,19 +141,35 @@ func main() {
+ 
+ 	log.Printf("Starting %s", version)
+ 
+-	// Good housekeeping for Unix sockets: unlink before binding
+-	if *listenNetwork == "unix" {
+-		if err := os.Remove(*listenAddr); err != nil && !os.IsNotExist(err) {
++	var listener net.Listener
++
++	if *listenSystemd {
++		listeners, err := activation.Listeners(true)
++		if err != nil {
+ 			log.Fatal(err)
+ 		}
+-	}
+ 
+-	// Change the umask only around net.Listen()
+-	oldUmask := syscall.Umask(*listenUmask)
+-	listener, err := net.Listen(*listenNetwork, *listenAddr)
+-	syscall.Umask(oldUmask)
+-	if err != nil {
+-		log.Fatal(err)
++		if len(listeners) != 1 {
++			log.Fatal("Unexpected number of socket activation fds")
++		}
++
++		listener = listeners[0]
++	} else {
++		// Good housekeeping for Unix sockets: unlink before binding
++		if *listenNetwork == "unix" {
++			if err := os.Remove(*listenAddr); err != nil && !os.IsNotExist(err) {
++				log.Fatal(err)
++			}
++		}
++
++		// Change the umask only around net.Listen()
++		oldUmask := syscall.Umask(*listenUmask)
++		var err error
++		listener, err = net.Listen(*listenNetwork, *listenAddr)
++		syscall.Umask(oldUmask)
++		if err != nil {
++			log.Fatal(err)
++		}
+ 	}
+ 
+ 	// Create Proxy Transport
